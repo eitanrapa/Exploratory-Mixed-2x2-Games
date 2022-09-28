@@ -1,0 +1,1 @@
+#Explore large 2x2 matrix subset and calculate predictions from each stationary concept
