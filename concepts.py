@@ -1,3 +1,5 @@
+import numpy as np
+
 #U is up, D is down, L is left, R is right
 #Player 1 is the row player, having up and down choices
 #Player 2 is the col player, having left and right choices
@@ -22,10 +24,52 @@ def nash_equilibrium(game):
     p_d = d_u / (d_u + d_d)
     q_l = c_r / (c_l + c_r)
     q_r = c_l / (c_l + c_r)
-    return p_u,p_d,q_l,q_r
+    return p_u, p_d, q_l, q_r
+
+# We want this function to output a set of probabilities, just like the Nash
+# Equilibrium, based on the 
+
+def transform(s_i, payoff):
+    '''
+    Transforms a payoff based on the security level. 
+    '''
+    return min(0, payoff - (payoff - s_i)/2)
 
 def impulse_balance_equilibrium(game):
-    return
+    '''
+    Returns the predicted probability of each strategy choice according to the
+    Impulse Balance Equilibrium model. 
+    '''
+    a_l, a_r, b_u, b_d, c_l, c_r, d_u, d_d = game
+    
+    # Security levels for players 1 and 2.
+    s_1 = max(min(a_l + c_l, a_r), min(a_l, a_r + c_r))
+    s_2 = max(min(b_u, b_d + d_d), min(b_u + d_u, b_d))
+
+    # Now need to transform the game.
+    LU_1 = transform(s_1, a_l + c_l)
+    LU_2 = transform(s_2, b_u)
+    RU_1 = transform(s_1, a_r)
+    RU_2 = transform(s_2, b_u + d_u)
+    LD_1 = transform(s_1, a_l)
+    LD_2 = transform(s_2, b_d + d_d)
+    RD_1 = transform(s_1, a_r + c_r)
+    RD_2 = transform(s_2, b_d)
+    
+    # Now calculate the magnitude of the impulses, which is the magnitude of the
+    # forgone payoff in the transformed game. 
+    c_l_star = max(LU_1 - s_1, LD_1 - s_1) # One of these two values should be 0
+    c_r_star = max(RU_1 - s_1, RD_1 - s_1)
+    d_u_star = max(LU_2 - s_2, RU_2 - s_2)
+    d_d_star = max(LD_2 - s_2, RD_2 - s_2)
+
+    c = c_l_star / c_r_star
+    d = d_u_star / d_d_star
+    
+    p_u = np.sqrt(c) / (np.sqrt(c) + np.sqrt(d))
+    q_l = 1 / (1 + np.sqrt(c * d))
+
+    return p_u, 1 - p_u, q_l, 1 - q_l
 
 def quantal_response_equilibrium(game):
     return
