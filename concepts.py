@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.optimize import fsolve, least_squares
 
 #U is up, D is down, L is left, R is right
 #Player 1 is the row player, having up and down choices
@@ -71,8 +72,24 @@ def impulse_balance_equilibrium(game):
 
     return p_u, 1 - p_u, q_l, 1 - q_l
 
-def quantal_response_equilibrium(game):
-    return
+# FIXME: adjust equations to include payoffs
+def qre_eqs(x, l = 0, payoffs = []):
+    # A = 3
+    eq1 = x[0] - 1/(1 + np.exp(l * (1 - (1 + 3) * x[1])))
+    eq2 = x[1] - 1/(1 + np.exp(l * (2 * x[0] - 1)))
+    return [eq1, eq2]
+
+def quantal_response_equilibrium(game, param):
+    '''
+    Quantal response equilibrium as function of chosen free parameter
+    '''
+    a_l, a_r, b_u, b_d, c_l, c_r, d_u, d_d = game
+    # use Nash eq as initial guess
+    p_u, p_d, q_l, q_r = nash_equilibrium(game)
+    soln = fsolve(qre_eqs, [p_u, q_l], (param))
+    qre_p_u = soln[0]
+    qre_q_l = soln[1]
+    return qre_p_u, 1 - qre_p_u, qre_q_l, 1 - qre_q_l
 
 def sample_n_equilibrium(game):
     return
