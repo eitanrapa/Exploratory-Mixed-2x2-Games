@@ -9,21 +9,8 @@ from scipy.optimize import fsolve, least_squares
 #p_u and p_d are Player 1's choice probability for Up and Down
 #q_l and q_r are Player 2's choice probability for Left and Right
 
-def transform_coords(game):
-    top_left_left, top_left_right, top_right_left, top_right_right, bot_left_left, bot_left_right, bot_right_left, bot_right_right = game
-    a_r = top_right_left
-    b_u = top_left_right
-    a_l = bot_left_left
-    b_d = bot_right_right
-    c_l = top_left_left - a_l
-    d_u = top_right_right - b_u
-    d_d = bot_left_right - b_d
-    c_r = bot_right_left - a_r
-    return a_l, a_r, b_u, b_d, c_l, c_r, d_u, d_d 
-
 def display_matrix(game):
-    a_l, a_r, b_u, b_d, c_l, c_r, d_u, d_d = transform_coords(game)
-
+    a_l, a_r, b_u, b_d, c_l, c_r, d_u, d_d = game
     top_left = a_l + c_l
     top_right = b_u + d_u
     bottom_left = b_d + d_d
@@ -32,7 +19,8 @@ def display_matrix(game):
     print("(" + str(a_l) + "," + str(bottom_left) + ")     (" + str(bottom_right) + "," + str(b_d) + ")")
 
 def nash_equilibrium(game):
-    a_l, a_r, b_u, b_d, c_l, c_r, d_u, d_d = transform_coords(game)
+    a_l, a_r, b_u, b_d, c_l, c_r, d_u, d_d = game
+    check_conditions(game)
     p_u = d_d / (d_u + d_d)
     p_d = d_u / (d_u + d_d)
     q_l = c_r / (c_l + c_r)
@@ -53,8 +41,8 @@ def impulse_balance_equilibrium(game):
     Returns the predicted probability of each strategy choice according to the
     Impulse Balance Equilibrium model. 
     '''
-    a_l, a_r, b_u, b_d, c_l, c_r, d_u, d_d = transform_coords(game)
-    
+    a_l, a_r, b_u, b_d, c_l, c_r, d_u, d_d = game
+   
     # Security levels for players 1 and 2.
     s_1 = max(min(a_l + c_l, a_r), min(a_l, a_r + c_r))
     s_2 = max(min(b_u, b_d + d_d), min(b_u + d_u, b_d))
@@ -76,10 +64,6 @@ def impulse_balance_equilibrium(game):
     d_u_star = max(LU_2 - s_2, RU_2 - s_2)
     d_d_star = max(LD_2 - s_2, RD_2 - s_2)
 
-    #temp fix, not sure what is going on
-    if(c_r_star==0 or d_d_star==0):
-        return None
-    
     c = c_l_star / c_r_star
     d = d_u_star / d_d_star
     
@@ -95,11 +79,11 @@ def qre_eqs(x, l = 0, payoffs = []):
     eq2 = x[1] - 1/(1 + np.exp(l * (2 * x[0] - 1)))
     return [eq1, eq2]
 
-def quantal_response_equilibrium(game, param=10):
+def quantal_response_equilibrium(game, param):
     '''
     Quantal response equilibrium as function of chosen free parameter
     '''
-    a_l, a_r, b_u, b_d, c_l, c_r, d_u, d_d = transform_coords(game)
+    a_l, a_r, b_u, b_d, c_l, c_r, d_u, d_d = game
     # use Nash eq as initial guess
     p_u, p_d, q_l, q_r = nash_equilibrium(game)
     soln = fsolve(qre_eqs, [p_u, q_l], (param))
@@ -112,3 +96,12 @@ def sample_n_equilibrium(game):
 
 def poisson_ch_equilibrium(game):
     return
+
+#Check for negatives and fractions
+def check_conditions(game):
+    a_l, a_r, b_u, b_d, c_l, c_r, d_u, d_d = game
+    if any(n < 0 for n in (a_l, a_r, b_u, b_d)):
+        raise Exception("Base payoffs must be non-negative")
+    if any(n <= 0 for n in (a_l, a_r, b_u, b_d)):
+        raise Exception("Payoff differences must be positive")
+    return None
