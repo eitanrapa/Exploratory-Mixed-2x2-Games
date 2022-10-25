@@ -122,9 +122,9 @@ def impulse_balance_equilibrium(game):
     Returns the predicted probability of each strategy choice according to the
     Impulse Balance Equilibrium model. 
     '''
-    a_l, a_r, b_u, b_d, c_l, c_r, d_u, d_d = game # transform_coords(game)
+    a_l, a_r, b_u, b_d, c_l, c_r, d_u, d_d = game 
     
-    LU_1, LU_2, RU_1, RU_2, LD_1, LD_2, RD_1, RD_2 = matrix
+    LU_1, LU_2, RU_1, RU_2, LD_1, LD_2, RD_1, RD_2 = game_to_matrix(game)
     # Security levels for players 1 and 2.
     s_1 = max(min(a_l + c_l, a_r), min(a_l, a_r + c_r))
     s_2 = max(min(b_u, b_d + d_d), min(b_u + d_u, b_d))
@@ -167,10 +167,10 @@ def quantal_response_equilibrium(game, lmbda=10):
         return LU_1 * q + RU_1 * (1 - q)
     def E_down(q):
         return LD_1 * q + RD_1 * (1 - q)
-    def E_left(r):
-        return LU_2 * r + LD_2 * (1 - r)
-    def E_right(r):
-        return RU_2 * r + RD_2 * (1 - r)
+    def E_left(p):
+        return LU_2 * p + LD_2 * (1 - p)
+    def E_right(p):
+        return RU_2 * p + RD_2 * (1 - p)
     
     # Now define the quantal response equations.
     def equations(X):
@@ -181,7 +181,7 @@ def quantal_response_equilibrium(game, lmbda=10):
     
     # Make the initial guess the Nash equilibrium.
     ne = nash_equilibrium(game)
-    p, q = fsolve([P, Q], [ne[0], ne[2]], (param))
+    p, q = fsolve(equations, [ne[0], ne[2]])
     
     return p, 1 - p, q, 1 - q
 

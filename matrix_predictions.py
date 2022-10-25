@@ -7,7 +7,7 @@ import concepts as concepts
 
 #Check for negatives and fractions
 def check_conditions(game):
-    a_l, a_r, b_u, b_d, c_l, c_r, d_u, d_d = concepts.transform_coords(game)
+    a_l, a_r, b_u, b_d, c_l, c_r, d_u, d_d = game
     if any(n < 0 for n in (a_l, a_r, b_u, b_d)):
        #Base payoffs must be non-negative
        return False
@@ -69,16 +69,16 @@ def main(number):
     for i in range(len(games)):
         #Get distinguishability for each pdxn compared to each other
         distance_1 = (get_distance(ne_pdxns[i],qre_pdxns[i])[0],get_distance(ne_pdxns[i],qre_pdxns[i])[2])
-        #distance_2 = (get_distance(ne_pdxns[i],ibe_pdxns[i])[0],get_distance(ne_pdxns[i],ibe_pdxns[i])[2])
-        #distance_3 = (get_distance(ibe_pdxns[i],qre_pdxns[i])[0],get_distance(ibe_pdxns[i],qre_pdxns[i])[2])
+        distance_2 = (get_distance(ne_pdxns[i],ibe_pdxns[i])[0],get_distance(ne_pdxns[i],ibe_pdxns[i])[2])
+        distance_3 = (get_distance(ibe_pdxns[i],qre_pdxns[i])[0],get_distance(ibe_pdxns[i],qre_pdxns[i])[2])
         
         #Combine each difference
         total_distance_1 = np.sqrt(distance_1[0]**2 + distance_1[1]**2)
-        #total_distance_2 = np.sqrt(distance_2[0]**2 + distance_2[1]**2)
-        #total_distance_3 = np.sqrt(distance_3[0]**2 + distance_3[1]**2)
+        total_distance_2 = np.sqrt(distance_2[0]**2 + distance_2[1]**2)
+        total_distance_3 = np.sqrt(distance_3[0]**2 + distance_3[1]**2)
         
         #Combine all totals
-        distinguishability = np.sqrt(total_distance_1**2) #+ total_distance_2**2 + total_distance_3**2)
+        distinguishability = np.sqrt(total_distance_1**2 + total_distance_2**2 + total_distance_3**2)
         distinguishability_values.append(distinguishability)
 
     return distinguishability_values, games, (ibe_pdxns,ne_pdxns,qre_pdxns)
