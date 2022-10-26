@@ -124,7 +124,6 @@ def impulse_balance_equilibrium(game):
     '''
     a_l, a_r, b_u, b_d, c_l, c_r, d_u, d_d = game 
     
-    LU_1, LU_2, RU_1, RU_2, LD_1, LD_2, RD_1, RD_2 = game_to_matrix(game)
     # Security levels for players 1 and 2.
     s_1 = max(min(a_l + c_l, a_r), min(a_l, a_r + c_r))
     s_2 = max(min(b_u, b_d + d_d), min(b_u + d_u, b_d))
@@ -141,10 +140,10 @@ def impulse_balance_equilibrium(game):
     
     # Now calculate the magnitude of the impulses, which is the magnitude of the
     # forgone payoff in the transformed game. 
-    c_l_star = max(LU_1 - s_1, LD_1 - s_1) # One of these two values should be 0
-    c_r_star = max(RU_1 - s_1, RD_1 - s_1)
-    d_u_star = max(LU_2 - s_2, RU_2 - s_2)
-    d_d_star = max(LD_2 - s_2, RD_2 - s_2)
+    c_r_star = max(RU_1, RD_1) - min(RU_1, RD_2) 
+    c_l_star = max(LU_1, LD_1) - min(LU_1, LD_2) 
+    d_u_star = max(LU_2, RU_2) - min(LU_2, RU_2) 
+    d_d_star = max(LD_2, RD_2) - min(LD_2, RD_2) 
     
     c = c_l_star / c_r_star
     d = d_u_star / d_d_star
@@ -155,7 +154,7 @@ def impulse_balance_equilibrium(game):
     return p_u, 1 - p_u, q_l, 1 - q_l
 
 
-def quantal_response_equilibrium(game, lmbda=10):
+def quantal_response_equilibrium(game, lmbda=0.1):
     '''
     Quantal response equilibrium as function of chosen free parameter
     '''
@@ -175,13 +174,13 @@ def quantal_response_equilibrium(game, lmbda=10):
     # Now define the quantal response equations.
     def equations(X):
         p, q = X
-        P = np.exp(lmbda * E_up(q)) / (np.exp(lmbda * E_up(q)) + np.exp(lmbda * E_down(q)))
-        Q = np.exp(lmbda * E_left(p)) / (np.exp(lmbda * E_left(p)) + np.exp(lmbda * E_right(p)))
+        P = p - np.exp(lmbda * E_up(q)) / (np.exp(lmbda * E_up(q)) + np.exp(lmbda * E_down(q)))
+        Q = q - np.exp(lmbda * E_left(p)) / (np.exp(lmbda * E_left(p)) + np.exp(lmbda * E_right(p)))
         return [P, Q]
     
     # Make the initial guess the Nash equilibrium.
-    ne = nash_equilibrium(game)
-    p, q = fsolve(equations, [ne[0], ne[2]])
+    # ne = nash_equilibrium(game)
+    p, q = fsolve(equations, (0.1, 0.1))
     
     return p, 1 - p, q, 1 - q
 
