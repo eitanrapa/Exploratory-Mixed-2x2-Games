@@ -73,12 +73,12 @@ def main(number):
         distance_3 = (get_distance(ibe_pdxns[i],qre_pdxns[i])[0],get_distance(ibe_pdxns[i],qre_pdxns[i])[2])
         
         #Combine each difference
-        total_distance_1 = np.sqrt(distance_1[0]**2 + distance_1[1]**2)
-        total_distance_2 = np.sqrt(distance_2[0]**2 + distance_2[1]**2)
-        total_distance_3 = np.sqrt(distance_3[0]**2 + distance_3[1]**2)
+        total_distance_1 = np.mean((distance_1[0] - distance_1[1])**2)
+        total_distance_2 = np.mean((distance_2[0] - distance_2[1])**2)
+        total_distance_3 = np.mean((distance_3[0] - distance_3[1])**2)
         
         #Combine all totals
-        distinguishability = np.sqrt(total_distance_1**2 + total_distance_2**2 + total_distance_3**2)
+        distinguishability = np.mean((total_distance_1 - total_distance_2 - total_distance_3)**2)
         distinguishability_values.append(distinguishability)
 
     return distinguishability_values, games, (ibe_pdxns,ne_pdxns,qre_pdxns)
