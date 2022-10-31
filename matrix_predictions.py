@@ -55,30 +55,47 @@ def get_distance(pdxns_1, pdxns_2):
 
     return np.array(dists)
 
+def get_rms_dist(model_1, model_2, i):
+    ''' 
+    Calculate average RMS error between two models for a game at index i.
+    '''
+    pred1 = model_1[i]
+    pred2 = model_2[i]
+    dist = (get_distance(pred1, pred2)[0],get_distance(pred1, pred2)[2])
+    return dist[0] + dist[1]
 
-def main(number):
-    
-    games = generate_games(number)
 
+def process_games(games):
+    '''
+    Return analysis results for an input list.
+    '''
     #Get predictions for suitable games
-    ibe_pdxns = [concepts.impulse_balance_equilibrium(game) for game in games]
     ne_pdxns = [concepts.nash_equilibrium(game) for game in games]
-    qre_pdxns = [concepts.quantal_response_equilibrium(game) for game in games]
+    ibe_pdxns = [concepts.impulse_balance_equilibrium(game) for game in games]
+    qre_pdxns = [concepts.quantal_response_equilibrium(game, 1.5) for game in games]
+    ase_pdxns = [concepts.action_sampling_equilibrium(game) for game in games]
     
+    model_results = [ne_pdxns, ibe_pdxns, qre_pdxns, ase_pdxns]
+
     distinguishability_values = []
     for i in range(len(games)):
-        #Get distinguishability for each pdxn compared to each other
-        distance_1 = (get_distance(ne_pdxns[i],qre_pdxns[i])[0],get_distance(ne_pdxns[i],qre_pdxns[i])[2])
-        distance_2 = (get_distance(ne_pdxns[i],ibe_pdxns[i])[0],get_distance(ne_pdxns[i],ibe_pdxns[i])[2])
-        distance_3 = (get_distance(ibe_pdxns[i],qre_pdxns[i])[0],get_distance(ibe_pdxns[i],qre_pdxns[i])[2])
-        
-        #Combine each difference
-        total_distance_1 = np.mean((distance_1[0] - distance_1[1])**2)
-        total_distance_2 = np.mean((distance_2[0] - distance_2[1])**2)
-        total_distance_3 = np.mean((distance_3[0] - distance_3[1])**2)
-        
+        #Get distinguishability for each pdxn compared to each other and store
+        #value for each pair
+        tot_dist = []
+        for a in range(4):
+            for b in range(a):
+                dist = get_rms_dist(model_results[a], model_results[b], i)
+                tot_dist.append(dist)
+
         #Combine all totals
-        distinguishability = np.mean((total_distance_1 - total_distance_2 - total_distance_3)**2)
+        distinguishability = np.mean(tot_dist)
         distinguishability_values.append(distinguishability)
 
-    return distinguishability_values, games, (ibe_pdxns,ne_pdxns,qre_pdxns)
+    return distinguishability_values, games, (ne_pdxns, ibe_pdxns, qre_pdxns, ase_pdxns)
+
+
+def main(number):
+    games = generate_games(number)
+    return process_games(games)
+
+    

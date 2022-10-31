@@ -1,4 +1,5 @@
 import numpy as np
+import scipy as sp
 from scipy.optimize import fsolve, least_squares
 
 # U is up, D is down, L is left, R is right
@@ -154,7 +155,7 @@ def impulse_balance_equilibrium(game):
     return p_u, 1 - p_u, q_l, 1 - q_l
 
 
-def quantal_response_equilibrium(game, lmbda=0.1):
+def quantal_response_equilibrium(game, lmbda=1):
     '''
     Quantal response equilibrium as function of chosen free parameter
     '''
@@ -184,8 +185,36 @@ def quantal_response_equilibrium(game, lmbda=0.1):
     
     return p, 1 - p, q, 1 - q
 
-def sample_n_equilibrium(game):
-    return
+def action_sampling_equilibrium(game, n = 7):
+    a_l, a_r, b_u, b_d, c_l, c_r, d_u, d_d = game
+    def alpha_u(k):
+        if k / n > c_r / (c_l + c_r):
+            return 1
+        elif k / n == c_r / (c_l + c_r):
+            return 0.5
+        else:
+            return 0
+    def alpha_l(m):
+        if m / n > d_u / (d_u + d_d):
+            return 1
+        elif m / n == d_u / (d_u + d_d):
+            return 0.5
+        else:
+            return 0
+    
+    au_lst = [alpha_u(k) for k in range(n + 1)]
+    al_lst = [alpha_l(m) for m in range(n + 1)]
 
-def poisson_ch_equilibrium(game):
-    return
+    def equations(X):
+        p, q = X
+        P = p - np.sum([sp.special.comb(n, i) * np.power(q, i) * np.power(1-q, n-i) 
+                    * au_lst[i] for i in range(n+1)])
+        Q = q - np.sum([sp.special.comb(n, i) * np.power(p, n-i) * np.power(1-p, n) 
+                    * al_lst[i] for i in range(n+1)])
+        return [P, Q]
+
+    p, q = fsolve(equations, (0.5, 0.5))
+    return p, 1 - p, q, 1 - q
+
+# def poisson_ch_equilibrium(game):
+#     return
